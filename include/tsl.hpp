@@ -31,6 +31,33 @@
 namespace tsl {
     bool _started = false;
 
+    // A class manage heap-allocated buffers
+    class Buffer {
+    public:
+        // Allocate the buffer
+        Buffer( int size = GPTSOCK_BUFFER_SIZE ) : size( size ) {
+            buffer = new unsigned char[size];
+        }
+
+        // Deallocate when we're done
+        ~Buffer() {
+            delete[] buffer;
+        }
+
+        // Direct pointer to the buffer
+        unsigned char *data() const {
+            return buffer;
+        }
+
+        // Returns the size of the buffer
+        int length() const {
+            return size;
+        }
+    private:
+        unsigned char *buffer;
+        int size;
+    };
+
     // A C++ abstraction for TCP sockets
     class Socket {
     public:
@@ -84,7 +111,26 @@ namespace tsl {
             return GPTSockConnect( sock, ip, port );
         }
 
-        // Sends
+        // Sends a Buffer to the current connection
+        int Send( Buffer buffer ) {
+            return GPTSockSend(
+                sock,
+                (const char*)buffer.data(),
+                buffer.length()
+            );
+        }
+
+        // Receives a Buffer from the current connection
+        Buffer Recv() {
+            Buffer buffer = Buffer();
+            GPTSockRecv(
+                sock,
+                (char*)buffer.data(),
+                buffer.length()
+            );
+
+            return buffer;
+        }
 
 
     private:

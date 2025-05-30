@@ -30,5 +30,10 @@ int main() {
     sock.Bind( 5000 );
     sock.Listen( 0 );
     tsl::Socket client = sock.Accept();
+    tsl::Buffer buf = client.Recv();
+
+    for ( int i = 0; i < buf.length(); i++ )
+        putchar( buf.data()[i] );
+
     return 0;
 }
