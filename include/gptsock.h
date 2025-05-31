@@ -14,7 +14,7 @@
     #include <winsock2.h>
     typedef SOCKET sock_t;
     #define CLOSESOCKET closesocket
-    #pragma comment(lib, "ws2_32.lib")
+    // #pragma comment(lib, "ws2_32.lib")
 #else
     #include <sys/types.h>
     #include <sys/socket.h>

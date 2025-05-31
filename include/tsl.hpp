@@ -60,10 +60,28 @@ namespace tsl {
         int length() const {
             return size;
         }
+
+        // Returns a heap-allocated pointer to a sub buffer
+        Buffer *SubBuffer( int byteOffset, int size );
+
     private:
         unsigned char *buffer;
         int size;
     };
+
+    // Returns a heap-allocated pointer to a sub buffer
+    Buffer *Buffer::SubBuffer( int byteOffset, int byteSize ) {
+        int end = byteOffset + byteSize;
+        if ( end > this->size ) {
+            end = this->size;
+            byteSize = end - byteOffset;
+        }
+
+        Buffer *buf = new Buffer( byteSize );
+        memcpy( buf->data(), this->buffer, byteSize );
+
+        return buf;
+    }
 
     // A C++ abstraction for TCP sockets
     // It will close itself when it goes out of scope
@@ -103,6 +121,9 @@ namespace tsl {
 
         // Sends a Buffer to the current connection
         void Send( Buffer *buffer );
+
+        // Sends the Buffer in chunks
+        void SendChunked( Buffer *buffer, int chunkSize = GPTSOCK_BUFFER_SIZE );
 
         // Receives a Buffer from the current connection
         Buffer Recv();
@@ -148,6 +169,23 @@ namespace tsl {
                     buffer->length() - sent
                 )
         );
+    }
+
+    // Sends the Buffer in chunks
+    void Socket::SendChunked( Buffer *buffer, int chunkSize ) {
+        // Calculate number of chunks
+        div_t chunkCountResult = div( buffer->length(), chunkSize );
+        int chunkCount = chunkCountResult.quot
+            + chunkCountResult.rem ? 1 : 0;
+        
+        // Iterate through the chunks and send
+        for ( int i = 0; i < chunkCount; i++ ) {
+            Buffer *subBuffer = buffer->SubBuffer( i * chunkSize, chunkSize );
+
+            Send( subBuffer );
+
+            delete subBuffer;
+        }
     }
 
     // Receives a Buffer from the current connection

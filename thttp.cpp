@@ -71,7 +71,7 @@ void THttp::ClientHandler( tsl::Socket client ) {
             "\r\n"
             "Hello World"
         );
-        client.Send( &outContent );
+        client.SendChunked( &outContent );
     }
     client.Close();
 }

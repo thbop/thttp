@@ -1,5 +1,5 @@
 CC = g++
-CFLAGS = -g -fdiagnostics-color=always -Iinclude
+CFLAGS = -g -fdiagnostics-color=always -Iinclude -Wall
 CLINK = -lWs2_32
 TARGET = thttp
 
