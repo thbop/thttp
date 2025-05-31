@@ -20,6 +20,9 @@
 * SOFTWARE.
 */
 
+#ifndef TSL_HPP
+#define TSL_HPP
+
 // Thbop Socket Layer
 // A C++ abstraction for TCP sockets
 #include <iostream>
@@ -200,3 +203,5 @@ namespace tsl {
         return buffer;
     }
 }
+
+#endif

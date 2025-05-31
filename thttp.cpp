@@ -24,6 +24,7 @@
 #include <thread>
 
 #include "tsl.hpp"
+#include "ClientRequest.hpp"
 
 
 class THttp {
@@ -57,21 +58,29 @@ void THttp::Run() {
 
 // Client main loop - responses to requests
 void THttp::ClientHandler( tsl::Socket client ) {
-    std::cout << "Connection!\n";
     while ( true ) {
         tsl::Buffer inContent = client.Recv();
         if ( inContent.length() == 0 )
             break;
+        
+        ClientRequest request( inContent.data(), inContent.length() );
+        if ( request.type() != ClientRequest::INVALID ) {
+            switch ( request.type() ) {
+                case ClientRequest::GET:  std::cout << "GET ";  break;
+                case ClientRequest::POST: std::cout << "POST "; break;
+            }
+            std::cout << request.resource() << '\n';
 
-        tsl::Buffer outContent(
-            "HTTP/1.1 200 OK\r\n"
-            "Content-Type: text/html\r\n"
-            "Content-Length: 12\r\n"
-            "Connection: close\r\n"
-            "\r\n"
-            "Hello World"
-        );
-        client.SendChunked( &outContent );
+            tsl::Buffer outContent(
+                "HTTP/1.1 200 OK\r\n"
+                "Content-Type: text/html\r\n"
+                "Content-Length: 12\r\n"
+                "Connection: close\r\n"
+                "\r\n"
+                "Hello World"
+            );
+            client.SendChunked( &outContent );
+        }
     }
     client.Close();
 }
