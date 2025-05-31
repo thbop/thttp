@@ -26,7 +26,37 @@
 #include "tsl.hpp"
 
 
-void ClientHandler( tsl::Socket client ) {
+class THttp {
+public:
+    // Initializes the server
+    THttp() {
+        sock = tsl::Socket();
+        sock.Bind( 80 );
+    }
+
+    // Server main loop - listens for and accepts connections
+    void Run();
+
+    // Client main loop - responses to requests
+    void ClientHandler( tsl::Socket client );
+
+private:
+    tsl::Socket sock;
+};
+
+// Server main loop - listens for and accepts connections
+void THttp::Run() {
+    std::cout << "Listening...\n";
+    while ( true ) {
+        sock.Listen( 0 );
+        tsl::Socket client = sock.Accept();
+        std::thread clientHandler( &THttp::ClientHandler, this, client );
+        clientHandler.detach();
+    }
+}
+
+// Client main loop - responses to requests
+void THttp::ClientHandler( tsl::Socket client ) {
     std::cout << "Connection!\n";
     while ( true ) {
         tsl::Buffer inContent = client.Recv();
@@ -47,16 +77,8 @@ void ClientHandler( tsl::Socket client ) {
 }
 
 int main() {
-    tsl::Socket sock = tsl::Socket();
-    sock.Bind( 5000 );
-
-    std::cout << "Listening...\n";
-    while ( true ) {
-        sock.Listen( 0 );
-        tsl::Socket client = sock.Accept();
-        std::thread clientHandler( ClientHandler, client );
-        clientHandler.detach();
-    }
+    THttp thttp = THttp();
+    thttp.Run();
 
     return 0;
 }

@@ -86,14 +86,7 @@ namespace tsl {
         Socket( sock_t sock ) : sock( sock ) {}
 
         // Binds server socket to a port
-        int Bind( int port ) {
-            int result = GPTSockBind( sock, port );
-            if ( result == SOCKET_ERROR )
-                std::cout << "[TSL] Failed to bind socket to port "
-                    << port << "!\n";
-            
-            return result;
-        }
+        int Bind( int port );
 
         // Starts listening for clients
         int Listen( int backlog ) {
@@ -101,13 +94,7 @@ namespace tsl {
         }
 
         // Accepts a client's connection
-        Socket Accept() {
-            sock_t clientSock = GPTSockAccept( sock );
-            if ( clientSock == INVALID_SOCKET )
-                std::cout << "[TSL] Failed to accept client!\n";
-
-            return Socket( clientSock );
-        }
+        Socket Accept();
 
         // Connects to a server
         int Connect( const char *ip, int port ) {
@@ -115,29 +102,10 @@ namespace tsl {
         }
 
         // Sends a Buffer to the current connection
-        void Send( Buffer *buffer ) {
-            for (
-                int sent = 0;
-                sent < buffer->length();
-                sent += GPTSockSend(
-                        sock,
-                        (const char*)buffer->data() + sent,
-                        buffer->length() - sent
-                    )
-            );
-        }
+        void Send( Buffer *buffer );
 
         // Receives a Buffer from the current connection
-        Buffer Recv() {
-            Buffer buffer = Buffer();
-            GPTSockRecv(
-                sock,
-                (char*)buffer.data(),
-                buffer.length()
-            );
-
-            return buffer;
-        }
+        Buffer Recv();
 
         // Closes the connection
         void Close() {
@@ -149,4 +117,48 @@ namespace tsl {
         sock_t sock;
         
     };
+
+    // Binds server socket to a port
+    int Socket::Bind( int port ) {
+        int result = GPTSockBind( sock, port );
+        if ( result == SOCKET_ERROR )
+            std::cout << "[TSL] Failed to bind socket to port "
+                << port << "!\n";
+        
+        return result;
+    }
+
+    // Accepts a client's connection
+    Socket Socket::Accept() {
+        sock_t clientSock = GPTSockAccept( sock );
+        if ( clientSock == INVALID_SOCKET )
+            std::cout << "[TSL] Failed to accept client!\n";
+
+        return Socket( clientSock );
+    }
+
+    // Sends a Buffer to the current connection
+    void Socket::Send( Buffer *buffer ) {
+        for (
+            int sent = 0;
+            sent < buffer->length();
+            sent += GPTSockSend(
+                    sock,
+                    (const char*)buffer->data() + sent,
+                    buffer->length() - sent
+                )
+        );
+    }
+
+    // Receives a Buffer from the current connection
+    Buffer Socket::Recv() {
+        Buffer buffer = Buffer();
+        GPTSockRecv(
+            sock,
+            (char*)buffer.data(),
+            buffer.length()
+        );
+
+        return buffer;
+    }
 }
