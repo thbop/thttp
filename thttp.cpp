@@ -21,19 +21,42 @@
 */
 
 #include <iostream>
+#include <thread>
 
 #include "tsl.hpp"
 
 
+void ClientHandler( tsl::Socket client ) {
+    std::cout << "Connection!\n";
+    while ( true ) {
+        tsl::Buffer inContent = client.Recv();
+        if ( inContent.length() == 0 )
+            break;
+
+        tsl::Buffer outContent(
+            "HTTP/1.1 200 OK\r\n"
+            "Content-Type: text/html\r\n"
+            "Content-Length: 12\r\n"
+            "Connection: close\r\n"
+            "\r\n"
+            "Hello World"
+        );
+        client.Send( &outContent );
+    }
+    client.Close();
+}
+
 int main() {
     tsl::Socket sock = tsl::Socket();
     sock.Bind( 5000 );
-    sock.Listen( 0 );
-    tsl::Socket client = sock.Accept();
-    tsl::Buffer buf = client.Recv();
 
-    for ( int i = 0; i < buf.length(); i++ )
-        putchar( buf.data()[i] );
+    std::cout << "Listening...\n";
+    while ( true ) {
+        sock.Listen( 0 );
+        tsl::Socket client = sock.Accept();
+        std::thread clientHandler( ClientHandler, client );
+        clientHandler.detach();
+    }
 
     return 0;
 }

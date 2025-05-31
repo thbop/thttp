@@ -23,6 +23,7 @@
 // Thbop Socket Layer
 // A C++ abstraction for TCP sockets
 #include <iostream>
+#include "string.h"
 
 #define GPTSOCK_HIDE_ERRORS
 #include "gptsock.h"
@@ -37,6 +38,12 @@ namespace tsl {
         // Allocate the buffer
         Buffer( int size = GPTSOCK_BUFFER_SIZE ) : size( size ) {
             buffer = new unsigned char[size];
+        }
+
+        // Create a buffer from a cstring
+        Buffer( const char *string ) : size( strlen( string ) + 1 ) {
+            buffer = new unsigned char[size];
+            memcpy( buffer, string, size );
         }
 
         // Deallocate when we're done
@@ -59,6 +66,7 @@ namespace tsl {
     };
 
     // A C++ abstraction for TCP sockets
+    // It will close itself when it goes out of scope
     class Socket {
     public:
         // Initializes the Socket object
@@ -76,11 +84,6 @@ namespace tsl {
 
         // Initializes an existing sock_t
         Socket( sock_t sock ) : sock( sock ) {}
-
-        // Destroy socket handle if object goes out of scope
-        ~Socket() {
-            GPTSockClose( sock );
-        }
 
         // Binds server socket to a port
         int Bind( int port ) {
@@ -112,11 +115,15 @@ namespace tsl {
         }
 
         // Sends a Buffer to the current connection
-        int Send( Buffer buffer ) {
-            return GPTSockSend(
-                sock,
-                (const char*)buffer.data(),
-                buffer.length()
+        void Send( Buffer *buffer ) {
+            for (
+                int sent = 0;
+                sent < buffer->length();
+                sent += GPTSockSend(
+                        sock,
+                        (const char*)buffer->data() + sent,
+                        buffer->length() - sent
+                    )
             );
         }
 
@@ -130,6 +137,11 @@ namespace tsl {
             );
 
             return buffer;
+        }
+
+        // Closes the connection
+        void Close() {
+            GPTSockClose( sock );
         }
 
 
