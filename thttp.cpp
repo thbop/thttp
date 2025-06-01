@@ -22,9 +22,11 @@
 
 #include <iostream>
 #include <thread>
+#include <string>
 
 #include "tsl.hpp"
 #include "ClientRequest.hpp"
+#include "Response.hpp"
 
 
 class THttp {
@@ -71,14 +73,10 @@ void THttp::ClientHandler( tsl::Socket client ) {
             }
             std::cout << request.resource() << '\n';
 
-            tsl::Buffer outContent(
-                "HTTP/1.1 200 OK\r\n"
-                "Content-Type: text/html\r\n"
-                "Content-Length: 12\r\n"
-                "Connection: close\r\n"
-                "\r\n"
-                "Hello World"
-            );
+            Response response( request.resource().c_str() );
+            std::string responseStr = response.Export();
+
+            tsl::Buffer outContent( responseStr.c_str() );
             client.SendChunked( &outContent );
         }
     }
